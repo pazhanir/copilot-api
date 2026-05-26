@@ -28,22 +28,57 @@ export const createChatCompletions = async (
     "X-Initiator": isAgentCall ? "agent" : "user",
   }
 
-  const response = await fetch(`${copilotBaseUrl(state)}/chat/completions`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(payload),
-  })
+  const MAX_RETRIES = 3
+  const TIMEOUT_MS = 120_000
+  let lastError: unknown
 
-  if (!response.ok) {
-    consola.error("Failed to create chat completions", response)
-    throw new HTTPError("Failed to create chat completions", response)
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS)
+
+      const response = await fetch(
+        `${copilotBaseUrl(state)}/chat/completions`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        },
+      )
+
+      clearTimeout(timeout)
+
+      if (!response.ok) {
+        consola.error("Failed to create chat completions", response)
+        throw new HTTPError("Failed to create chat completions", response)
+      }
+
+      if (payload.stream) {
+        return events(response)
+      }
+
+      return (await response.json()) as ChatCompletionResponse
+    } catch (error) {
+      lastError = error
+
+      // Don't retry on HTTP errors (4xx), only on network/timeout issues
+      if (error instanceof HTTPError) throw error
+
+      consola.warn(
+        `Chat completions request failed (attempt ${attempt + 1}/${MAX_RETRIES}):`,
+        error instanceof Error ? error.message : error,
+      )
+
+      if (attempt < MAX_RETRIES - 1) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (attempt + 1)),
+        )
+      }
+    }
   }
 
-  if (payload.stream) {
-    return events(response)
-  }
-
-  return (await response.json()) as ChatCompletionResponse
+  throw lastError
 }
 
 // Streaming types
