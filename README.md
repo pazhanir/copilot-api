@@ -1,5 +1,7 @@
 # Copilot API Proxy
 
+> Originally created by [Erick Christian](https://github.com/ericc-ch) — forked and maintained by [@pazhanir](https://github.com/pazhanir)
+
 > [!WARNING]
 > This is a reverse-engineered proxy of GitHub Copilot API. It is not supported by GitHub, and may break unexpectedly. Use at your own risk.
 
@@ -27,11 +29,12 @@
 
 ## Project Overview
 
-A reverse-engineered proxy for the GitHub Copilot API that exposes it as an OpenAI and Anthropic compatible service. This allows you to use GitHub Copilot with any tool that supports the OpenAI Chat Completions API or the Anthropic Messages API, including to power [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview).
+A reverse-engineered proxy for the GitHub Copilot API that exposes it as an OpenAI and Anthropic compatible service. This allows you to use GitHub Copilot with any tool that supports the OpenAI Chat Completions API, the OpenAI Responses API, or the Anthropic Messages API, including to power [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview), [Claude Desktop](https://claude.ai/download), [Codex CLI](https://github.com/openai/codex), and Codex Desktop.
 
 ## Features
 
-- **OpenAI & Anthropic Compatibility**: Exposes GitHub Copilot as an OpenAI-compatible (`/v1/chat/completions`, `/v1/models`, `/v1/embeddings`) and Anthropic-compatible (`/v1/messages`) API.
+- **OpenAI & Anthropic Compatibility**: Exposes GitHub Copilot as an OpenAI-compatible (`/v1/chat/completions`, `/v1/responses`, `/v1/models`, `/v1/embeddings`) and Anthropic-compatible (`/v1/messages`) API.
+- **OpenAI Responses API**: Native `/v1/responses` endpoint support for Codex CLI and Codex Desktop (supports `gpt-5.5` and other responses-only models).
 - **Claude Code Integration**: Easily configure and launch [Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) to use Copilot as its backend with a simple command-line flag (`--claude-code`).
 - **Usage Dashboard**: A web-based dashboard to monitor your Copilot API usage, view quotas, and see detailed statistics.
 - **Rate Limit Control**: Manage API usage with rate-limiting options (`--rate-limit`) and a waiting mechanism (`--wait`) to prevent errors from rapid requests.
@@ -121,19 +124,19 @@ The Docker image includes:
 You can run the project directly using npx:
 
 ```sh
-npx copilot-api@latest start
+npx @impazhani/copilot-api@latest start
 ```
 
 With options:
 
 ```sh
-npx copilot-api@latest start --port 8080
+npx @impazhani/copilot-api@latest start --port 8080
 ```
 
 For authentication only:
 
 ```sh
-npx copilot-api@latest auth
+npx @impazhani/copilot-api@latest auth
 ```
 
 ## Command Structure
@@ -185,11 +188,12 @@ The server exposes several endpoints to interact with the Copilot API. It provid
 
 These endpoints mimic the OpenAI API structure.
 
-| Endpoint                    | Method | Description                                               |
-| --------------------------- | ------ | --------------------------------------------------------- |
-| `POST /v1/chat/completions` | `POST` | Creates a model response for the given chat conversation. |
-| `GET /v1/models`            | `GET`  | Lists the currently available models.                     |
-| `POST /v1/embeddings`       | `POST` | Creates an embedding vector representing the input text.  |
+| Endpoint                    | Method | Description                                                                  |
+| --------------------------- | ------ | ---------------------------------------------------------------------------- |
+| `POST /v1/chat/completions` | `POST` | Creates a model response for the given chat conversation.                    |
+| `POST /v1/responses`        | `POST` | OpenAI Responses API (used by Codex CLI/Desktop, supports gpt-5.5 models).  |
+| `GET /v1/models`            | `GET`  | Lists the currently available models.                                        |
+| `POST /v1/embeddings`       | `POST` | Creates an embedding vector representing the input text.                     |
 
 ### Anthropic Compatible Endpoints
 
@@ -215,46 +219,46 @@ Using with npx:
 
 ```sh
 # Basic usage with start command
-npx copilot-api@latest start
+npx @impazhani/copilot-api@latest start
 
 # Run on custom port with verbose logging
-npx copilot-api@latest start --port 8080 --verbose
+npx @impazhani/copilot-api@latest start --port 8080 --verbose
 
 # Use with a business plan GitHub account
-npx copilot-api@latest start --account-type business
+npx @impazhani/copilot-api@latest start --account-type business
 
 # Use with an enterprise plan GitHub account
-npx copilot-api@latest start --account-type enterprise
+npx @impazhani/copilot-api@latest start --account-type enterprise
 
 # Enable manual approval for each request
-npx copilot-api@latest start --manual
+npx @impazhani/copilot-api@latest start --manual
 
 # Set rate limit to 30 seconds between requests
-npx copilot-api@latest start --rate-limit 30
+npx @impazhani/copilot-api@latest start --rate-limit 30
 
 # Wait instead of error when rate limit is hit
-npx copilot-api@latest start --rate-limit 30 --wait
+npx @impazhani/copilot-api@latest start --rate-limit 30 --wait
 
 # Provide GitHub token directly
-npx copilot-api@latest start --github-token ghp_YOUR_TOKEN_HERE
+npx @impazhani/copilot-api@latest start --github-token ghp_YOUR_TOKEN_HERE
 
 # Run only the auth flow
-npx copilot-api@latest auth
+npx @impazhani/copilot-api@latest auth
 
 # Run auth flow with verbose logging
-npx copilot-api@latest auth --verbose
+npx @impazhani/copilot-api@latest auth --verbose
 
 # Show your Copilot usage/quota in the terminal (no server needed)
-npx copilot-api@latest check-usage
+npx @impazhani/copilot-api@latest check-usage
 
 # Display debug information for troubleshooting
-npx copilot-api@latest debug
+npx @impazhani/copilot-api@latest debug
 
 # Display debug information in JSON format
-npx copilot-api@latest debug --json
+npx @impazhani/copilot-api@latest debug --json
 
 # Initialize proxy from environment variables (HTTP_PROXY, HTTPS_PROXY, etc.)
-npx copilot-api@latest start --proxy-env
+npx @impazhani/copilot-api@latest start --proxy-env
 ```
 
 ## Using the Usage Viewer
@@ -263,7 +267,7 @@ After starting the server, a URL to the Copilot Usage Dashboard will be displaye
 
 1.  Start the server. For example, using npx:
     ```sh
-    npx copilot-api@latest start
+    npx @impazhani/copilot-api@latest start
     ```
 2.  The server will output a URL to the usage viewer. Copy and paste this URL into your browser. It will look something like this:
     `https://ericc-ch.github.io/copilot-api?endpoint=http://localhost:4141/usage`
@@ -289,7 +293,7 @@ There are two ways to configure Claude Code to use this proxy:
 To get started, run the `start` command with the `--claude-code` flag:
 
 ```sh
-npx copilot-api@latest start --claude-code
+npx @impazhani/copilot-api@latest start --claude-code
 ```
 
 You will be prompted to select a primary model and a "small, fast" model for background tasks. After selecting the models, a command will be copied to your clipboard. This command sets the necessary environment variables for Claude Code to use the proxy.
@@ -325,6 +329,37 @@ Here is an example `.claude/settings.json` file:
 You can find more options here: [Claude Code settings](https://docs.anthropic.com/en/docs/claude-code/settings#environment-variables)
 
 You can also read more about IDE integration here: [Add Claude Code to your IDE](https://docs.anthropic.com/en/docs/claude-code/ide-integrations)
+
+## Using with Codex
+
+This proxy supports the OpenAI Responses API (`/v1/responses`), which is required by [Codex CLI](https://github.com/openai/codex) and Codex Desktop. Models like `gpt-5.5` that only work via the Responses API are fully supported.
+
+### Setup
+
+1. Start the proxy server:
+
+```sh
+npx @impazhani/copilot-api@latest start
+```
+
+2. Set the environment variables and run Codex:
+
+```sh
+export OPENAI_BASE_URL=http://localhost:4141/v1
+export OPENAI_API_KEY=dummy
+codex
+```
+
+Codex will automatically use `/v1/responses` with `gpt-5.5` through the proxy.
+
+### Persistent Configuration
+
+Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
+
+```sh
+export OPENAI_BASE_URL=http://localhost:4141/v1
+export OPENAI_API_KEY=dummy
+```
 
 ## Running from Source
 
