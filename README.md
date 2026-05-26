@@ -342,24 +342,26 @@ This proxy supports the OpenAI Responses API (`/v1/responses`), which is require
 npx @impazhani/copilot-api@latest start
 ```
 
-2. Set the environment variables and run Codex:
+2. Update your Codex configuration file (`~/.codex/config.toml`):
 
-```sh
-export OPENAI_BASE_URL=http://localhost:4141/v1
-export OPENAI_API_KEY=dummy
-codex
+```toml
+model = "gpt-5.5"
+model_provider = "local_provider"
+
+[model_providers.local_provider]
+name = "Local GPT-5.5"
+base_url = "http://localhost:4141/v1"
+env_key = "LOCAL_API_KEY"
+wire_api = "responses"
 ```
 
-Codex will automatically use `/v1/responses` with `gpt-5.5` through the proxy.
-
-### Persistent Configuration
-
-Add to your shell profile (`~/.bashrc`, `~/.zshrc`, etc.):
+3. Set the environment variable (any dummy value works):
 
 ```sh
-export OPENAI_BASE_URL=http://localhost:4141/v1
-export OPENAI_API_KEY=dummy
+export LOCAL_API_KEY="123"
 ```
+
+Add it to your shell profile (`~/.bashrc`, `~/.zshrc`) to persist across sessions.
 
 ## Running from Source
 
